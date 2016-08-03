@@ -1,6 +1,6 @@
 package financialinstruments
 
-const readByUUIDQuery = `MATCH (fi:FinancialInstrument {uuid:{uuid}})
+const readByUUIDStatement = `MATCH (fi:FinancialInstrument {uuid:{uuid}})
 				OPTIONAL MATCH (fi)-[:ISSUED_BY]->(org:Thing)
 				OPTIONAL MATCH (upp:UPPIdentifier)-[:IDENTIFIES]->(fi)
 				OPTIONAL MATCH (factset:FactsetIdentifier)-[:IDENTIFIES]->(fi)
@@ -12,29 +12,29 @@ const readByUUIDQuery = `MATCH (fi:FinancialInstrument {uuid:{uuid}})
 					figiCode:figi.value,
 					factsetIdentifier:factset.value} as alternativeIdentifiers`
 
-const newIdentifierQuery = `MERGE (t:Thing {uuid:{uuid}})
+const newIdentifierStatement = `MERGE (t:Thing {uuid:{uuid}})
 				CREATE (i:Identifier {value:{value}})
 				MERGE (t)<-[:IDENTIFIES]-(i)
 				set i : %s`
 
-const writeQuery = `MERGE (n:Thing{uuid: {uuid}})
+const writeStatement = `MERGE (n:Thing{uuid: {uuid}})
 			set n={props}
 			set n :Concept
 			set n :FinancialInstrument
 			set n :Equity`
 
-const deleteEntityRelationshipsQuery = `MATCH (t:Thing {uuid:{uuid}})
+const deleteEntityRelationshipsStatement = `MATCH (t:Thing {uuid:{uuid}})
 						OPTIONAL MATCH (i:Identifier)-[ir:IDENTIFIES]->(t)
 						DELETE ir, i`
 
-const countQuery = `MATCH (n:FinancialInstrument) return count(n) as count`
+const countStatement = `MATCH (n:FinancialInstrument) return count(n) as count`
 
-const organizationRelationshipQuery = `MERGE (fi:Thing {uuid: {uuid}})
+const organizationRelationshipStatement = `MERGE (fi:Thing {uuid: {uuid}})
 					MERGE (orgUpp:Identifier:UPPIdentifier{value:{orgUuid}})
 					MERGE (orgUpp)-[:IDENTIFIES]->(o:Thing) ON CREATE SET o.uuid = {orgUuid}
 					MERGE (fi)-[:ISSUED_BY]->(o)`
 
-const clearIdentifierQuery = `MATCH (p:Thing {uuid: {uuid}})
+const clearIdentifierStatement = `MATCH (p:Thing {uuid: {uuid}})
 				OPTIONAL MATCH (p)<-[ir:IDENTIFIES]-(i:Identifier)
 				REMOVE p:Concept
 				REMOVE p:FinancialInstrument
@@ -42,7 +42,7 @@ const clearIdentifierQuery = `MATCH (p:Thing {uuid: {uuid}})
 				DELETE ir, i
 				SET p={props}`
 
-const removeUnusedNodeQuery = `MATCH (p:Thing {uuid: {uuid}})
+const removeUnusedNodeStatement = `MATCH (p:Thing {uuid: {uuid}})
 				OPTIONAL MATCH (p)-[a]-(x)
 				WITH p, count(a) AS relCount
 				WHERE relCount = 0

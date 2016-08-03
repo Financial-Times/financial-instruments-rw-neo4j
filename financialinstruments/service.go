@@ -45,7 +45,7 @@ func (s service) Read(uuid string) (interface{}, bool, error) {
 	results := []financialInstrument{}
 
 	readQuery := &neoism.CypherQuery{
-		Statement: readByUUIDQuery,
+		Statement: readByUUIDStatement,
 		Parameters:map[string]interface{}{
 			"uuid": uuid,
 		},
@@ -61,7 +61,7 @@ func (s service) Read(uuid string) (interface{}, bool, error) {
 }
 
 func createNewIdentifierQuery(uuid string, identifierLabel string, identifierValue string) *neoism.CypherQuery {
-	statementTemplate := fmt.Sprintf(newIdentifierQuery, identifierLabel)
+	statementTemplate := fmt.Sprintf(newIdentifierStatement, identifierLabel)
 
 	query := &neoism.CypherQuery{
 		Statement: statementTemplate,
@@ -88,7 +88,7 @@ func (s service) Write(thing interface{}) error {
 	queries := []*neoism.CypherQuery{}
 
 	deleteEntityRelationshipsQuery := &neoism.CypherQuery{
-		Statement: deleteEntityRelationshipsQuery,
+		Statement: deleteEntityRelationshipsStatement,
 		Parameters: map[string]interface{}{
 			"uuid": fi.UUID,
 		},
@@ -96,7 +96,7 @@ func (s service) Write(thing interface{}) error {
 	queries = append(queries, deleteEntityRelationshipsQuery)
 
 	writeQuery := &neoism.CypherQuery{
-		Statement: writeQuery,
+		Statement: writeStatement,
 		Parameters: map[string]interface{}{
 			"uuid": fi.UUID,
 			"props": params,
@@ -122,7 +122,7 @@ func (s service) Write(thing interface{}) error {
 
 	if fi.IssuedBy != "" {
 		organizationRelationshipQuery := &neoism.CypherQuery{
-			Statement: organizationRelationshipQuery,
+			Statement: organizationRelationshipStatement,
 			Parameters: map[string]interface{}{
 				"uuid": fi.UUID,
 				"orgUuid": fi.IssuedBy,
@@ -136,7 +136,7 @@ func (s service) Write(thing interface{}) error {
 
 func (s service) Delete(uuid string) (bool, error) {
 	clearNode := &neoism.CypherQuery{
-		Statement: clearIdentifierQuery,
+		Statement: clearIdentifierStatement,
 		Parameters: map[string]interface{}{
 			"uuid": uuid,
 			"props": map[string]interface{}{
@@ -147,7 +147,7 @@ func (s service) Delete(uuid string) (bool, error) {
 	}
 
 	removeNodeIfUnused := &neoism.CypherQuery{
-		Statement: removeUnusedNodeQuery,
+		Statement: removeUnusedNodeStatement,
 		Parameters: map[string]interface{}{
 			"uuid": uuid,
 		},
@@ -174,7 +174,7 @@ func (s service) Count() (int, error) {
 	}{}
 
 	query := &neoism.CypherQuery{
-		Statement: countQuery,
+		Statement: countStatement,
 		Result: &results,
 	}
 	err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{query})
