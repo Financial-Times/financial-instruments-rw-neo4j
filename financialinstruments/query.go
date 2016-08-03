@@ -47,3 +47,5 @@ const removeUnusedNodeStatement = `MATCH (p:Thing {uuid: {uuid}})
 				WITH p, count(a) AS relCount
 				WHERE relCount = 0
 				DELETE p`
+
+const idsStatement = `MATCH (fi:FinancialInstrument) RETURN fi.uuid as id, fi.hash as hash SKIP {skip} LIMIT {limit}`

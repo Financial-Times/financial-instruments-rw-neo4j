@@ -5,12 +5,16 @@ import (
 	"github.com/jmcvetta/neoism"
 	"fmt"
 	"encoding/json"
+	"github.com/Financial-Times/up-rw-app-api-go/rwapi"
 )
 
 type service struct {
 	cypherRunner neoutils.CypherRunner
 	indexManager neoutils.IndexManager
 }
+
+const batchSize = 4096
+
 
 //NewCypherFinancialInstrumentService returns a new service responsible for writing financial instruments in Neo4j
 func NewCypherFinancialInstrumentService(cypherRunner neoutils.CypherRunner, indexManager neoutils.IndexManager) service {
@@ -75,10 +79,16 @@ func createNewIdentifierQuery(uuid string, identifierLabel string, identifierVal
 
 func (s service) Write(thing interface{}) error {
 
+	hash, err := writeHash(thing)
+	if err != nil {
+		return err
+	}
+
 	fi := thing.(financialInstrument)
 
 	params := map[string]interface{}{
 		"uuid": fi.UUID,
+		"hash": hash,
 	}
 
 	if fi.PrefLabel != "" {
@@ -190,6 +200,35 @@ func (s service) DecodeJSON(dec *json.Decoder) (interface{}, string, error) {
 	fi := financialInstrument{}
 	err := dec.Decode(&fi)
 	return fi, fi.UUID, err
+}
+
+func (s service) IDs(f func(id rwapi.IDEntry) (bool, error)) error {
+
+	for skip := 0; ; skip += batchSize {
+		results := []rwapi.IDEntry{}
+		readQuery := &neoism.CypherQuery{
+			Statement: idsStatement,
+			Parameters: map[string]interface{}{
+				"limit": batchSize,
+				"skip": skip,
+			},
+			Result: &results,
+		}
+
+		if err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{readQuery}); err != nil {
+			return nil
+		}
+		if len(results) == 0 {
+			return nil
+		}
+		for _, result := range results {
+			more, err := f(result)
+			if !more || err != nil {
+				return err
+			}
+		}
+
+	}
 }
 
 func (s service) Check() error {
