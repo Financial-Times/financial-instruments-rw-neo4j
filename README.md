@@ -51,7 +51,7 @@ Response format for current version:
 ### PUT
 The only mandatory field is the uuid, and the alternativeIdentifier uuids (because the uuid is also listed in the alternativeIdentifier uuids list). The uuid in the body must match the one used on the path.
 
-Every request results in an attempt to update that financial instrument: unlike with GraphDB there is no check on whether the financial instrument already exists and whether there are any changes between what's there and what's being written. We just do a MERGE which is Neo4j for create if not there, update if it is there.
+Every request results in an attempt to update that financial instrument using the Neo4j MERGE clause, which updates the pattern if it exists, otherwise creates a new one.
 
 A successful PUT results in 200.
 
