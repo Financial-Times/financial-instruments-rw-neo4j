@@ -5,12 +5,14 @@ const readByUUIDStatement = `MATCH (fi:FinancialInstrument {uuid:{uuid}})
 				OPTIONAL MATCH (upp:UPPIdentifier)-[:IDENTIFIES]->(fi)
 				OPTIONAL MATCH (factset:FactsetIdentifier)-[:IDENTIFIES]->(fi)
 				OPTIONAL MATCH (figi:FIGIIdentifier)-[:IDENTIFIES]->(fi)
+				OPTIONAL MATCH (wsod:WSODIdentifier)-[:IDENTIFIES]->(fi)
 				return fi.uuid as uuid,
 					fi.prefLabel as prefLabel,
 					org.uuid as issuedBy,
 					{uuids:collect(distinct upp.value),
 					figiCode:figi.value,
-					factsetIdentifier:factset.value} as alternativeIdentifiers`
+					factsetIdentifier:factset.value,
+					wsodIdentifier: wsod.value} as alternativeIdentifiers`
 
 const newIdentifierStatement = `MERGE (t:Thing {uuid:{uuid}})
 				CREATE (i:Identifier {value:{value}})

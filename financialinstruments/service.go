@@ -130,6 +130,10 @@ func (s service) Write(thing interface{}) error {
 		queries = append(queries, createNewIdentifierQuery(fi.UUID, figiIdentifierLabel, fi.AlternativeIdentifiers.FIGICode))
 	}
 
+	if fi.AlternativeIdentifiers.WSODIdentifier != "" {
+		queries = append(queries, createNewIdentifierQuery(fi.UUID, wsodIdentifierLabel, fi.AlternativeIdentifiers.WSODIdentifier))
+	}
+
 	if fi.IssuedBy != "" {
 		organizationRelationshipQuery := &neoism.CypherQuery{
 			Statement: organizationRelationshipStatement,

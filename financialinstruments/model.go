@@ -11,10 +11,12 @@ type alternativeIdentifiers struct {
 	UUIDS             []string `json:"uuids"`
 	FactsetIdentifier string   `json:"factsetIdentifier"`
 	FIGICode          string   `json:"figiCode"`
+	WSODIdentifier    string   `json:"wsodIdentifier"`
 }
 
 const (
 	uppIdentifierLabel = "UPPIdentifier"
 	factsetIdentifierLabel = "FactsetIdentifier"
 	figiIdentifierLabel = "FIGIIdentifier"
+	wsodIdentifierLabel = "WSODIdentifier"
 )
