@@ -51,3 +51,5 @@ const removeUnusedNodeStatement = `MATCH (p:Thing {uuid: {uuid}})
 				DELETE p`
 
 const idsStatement = `MATCH (fi:FinancialInstrument) RETURN fi.uuid as id, fi.hash as hash SKIP {skip} LIMIT {limit}`
+
+const findOrganisationStatement = `MATCH (i:Identifier {value: {uuid}})-[:IDENTIFIES]->(org:Thing) RETURN org.uuid as uuid`

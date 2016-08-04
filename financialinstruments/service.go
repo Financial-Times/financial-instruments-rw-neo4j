@@ -135,11 +135,34 @@ func (s service) Write(thing interface{}) error {
 	}
 
 	if fi.IssuedBy != "" {
+		orgUuid := fi.IssuedBy
+
+		orgResults := []struct{
+			UUID string `json:"uuid"`
+		}{}
+
+		findOrganisationQuery := &neoism.CypherQuery{
+			Statement: findOrganisationStatement,
+			Parameters: map[string]interface{}{
+				"uuid": fi.IssuedBy,
+			},
+			Result: &orgResults,
+		}
+
+		if err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{findOrganisationQuery}); err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		if len(orgResults) > 0 {
+			orgUuid = orgResults[0].UUID
+		}
+
 		organizationRelationshipQuery := &neoism.CypherQuery{
 			Statement: organizationRelationshipStatement,
 			Parameters: map[string]interface{}{
 				"uuid": fi.UUID,
-				"orgUuid": fi.IssuedBy,
+				"orgUuid": orgUuid,
 			},
 		}
 		queries = append(queries, organizationRelationshipQuery)
