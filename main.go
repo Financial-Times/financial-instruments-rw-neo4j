@@ -72,7 +72,7 @@ func main() {
 		baseftrwapp.OutputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 
 		services := map[string]baseftrwapp.Service{
-			"financialInstruments": financialInstrumentsDriver,
+			"financial-instruments": financialInstrumentsDriver,
 		}
 
 		var checks []v1a.Check
