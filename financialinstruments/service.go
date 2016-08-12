@@ -15,7 +15,6 @@ type service struct {
 
 const batchSize = 4096
 
-
 //NewCypherFinancialInstrumentService returns a new service responsible for writing financial instruments in Neo4j
 func NewCypherFinancialInstrumentService(cypherRunner neoutils.CypherRunner, indexManager neoutils.IndexManager) service {
 	return service{
@@ -173,7 +172,7 @@ func (s service) Write(thing interface{}) error {
 
 func (s service) Delete(uuid string) (bool, error) {
 	clearNode := &neoism.CypherQuery{
-		Statement: clearIdentifierStatement,
+		Statement: clearNodeStatement,
 		Parameters: map[string]interface{}{
 			"uuid": uuid,
 			"props": map[string]interface{}{

@@ -19,36 +19,36 @@ const newIdentifierStatement = `MERGE (t:Thing {uuid:{uuid}})
 				MERGE (t)<-[:IDENTIFIES]-(i)
 				set i : %s`
 
-const writeStatement = `MERGE (n:Thing{uuid: {uuid}})
-			set n={props}
-			set n :Concept
-			set n :FinancialInstrument
-			set n :Equity`
+const writeStatement = `MERGE (t:Thing{uuid: {uuid}})
+			set t={props}
+			set t :Concept
+			set t :FinancialInstrument
+			set t :Equity`
 
 const deleteEntityRelationshipsStatement = `MATCH (t:Thing {uuid:{uuid}})
+						OPTIONAL MATCH (t)-[is:ISSUED_BY]->(org:Thing)
 						OPTIONAL MATCH (i:Identifier)-[ir:IDENTIFIES]->(t)
-						DELETE ir, i`
+						DELETE ir, is, i`
 
-const countStatement = `MATCH (n:FinancialInstrument) return count(n) as count`
+const countStatement = `MATCH (fi:FinancialInstrument) return count(fi) as count`
 
 const organizationRelationshipStatement = `MERGE (fi:Thing {uuid: {uuid}})
 					MERGE (orgUpp:Identifier:UPPIdentifier{value:{orgUuid}})
 					MERGE (orgUpp)-[:IDENTIFIES]->(o:Thing) ON CREATE SET o.uuid = {orgUuid}
 					MERGE (fi)-[:ISSUED_BY]->(o)`
 
-const clearIdentifierStatement = `MATCH (p:Thing {uuid: {uuid}})
-				OPTIONAL MATCH (p)<-[ir:IDENTIFIES]-(i:Identifier)
-				REMOVE p:Concept
-				REMOVE p:FinancialInstrument
-				REMOVE p:Equity
-				DELETE ir, i
-				SET p={props}`
+const clearNodeStatement = `MATCH (t:Thing {uuid: {uuid}})
+				OPTIONAL MATCH (t)-[is:ISSUED_BY]->(org:Thing)
+				OPTIONAL MATCH (t)<-[ir:IDENTIFIES]-(i:Identifier)
+				REMOVE t:Concept:FinancialInstrument:Equity
+				DELETE is, ir, i
+				SET t={props}`
 
-const removeUnusedNodeStatement = `MATCH (p:Thing {uuid: {uuid}})
-				OPTIONAL MATCH (p)-[a]-(x)
-				WITH p, count(a) AS relCount
+const removeUnusedNodeStatement = `MATCH (t:Thing {uuid: {uuid}})
+				OPTIONAL MATCH (t)-[a]-(x)
+				WITH t, count(a) AS relCount
 				WHERE relCount = 0
-				DELETE p`
+				DELETE t`
 
 const idsStatement = `MATCH (fi:FinancialInstrument) RETURN fi.uuid as id, fi.hash as hash SKIP {skip} LIMIT {limit}`
 
