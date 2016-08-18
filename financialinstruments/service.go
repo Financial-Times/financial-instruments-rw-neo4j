@@ -48,7 +48,19 @@ func (s service) Read(uuid string) (interface{}, bool, error) {
 	results := []financialInstrument{}
 
 	readQuery := &neoism.CypherQuery{
-		Statement: readByUUIDStatement,
+		Statement: `MATCH (fi:FinancialInstrument {uuid:{uuid}})
+				OPTIONAL MATCH (fi)-[:ISSUED_BY]->(org:Thing)
+				OPTIONAL MATCH (upp:UPPIdentifier)-[:IDENTIFIES]->(fi)
+				OPTIONAL MATCH (factset:FactsetIdentifier)-[:IDENTIFIES]->(fi)
+				OPTIONAL MATCH (figi:FIGIIdentifier)-[:IDENTIFIES]->(fi)
+				OPTIONAL MATCH (wsod:WSODIdentifier)-[:IDENTIFIES]->(fi)
+				return fi.uuid as uuid,
+					fi.prefLabel as prefLabel,
+					org.uuid as issuedBy,
+					{uuids:collect(distinct upp.value),
+					figiCode:figi.value,
+					factsetIdentifier:factset.value,
+					wsodIdentifier: wsod.value} as alternativeIdentifiers`,
 		Parameters:map[string]interface{}{
 			"uuid": uuid,
 		},
@@ -64,7 +76,10 @@ func (s service) Read(uuid string) (interface{}, bool, error) {
 }
 
 func createNewIdentifierQuery(uuid string, identifierLabel string, identifierValue string) *neoism.CypherQuery {
-	statementTemplate := fmt.Sprintf(newIdentifierStatement, identifierLabel)
+	statementTemplate := fmt.Sprintf(`MERGE (t:Thing {uuid:{uuid}})
+				CREATE (i:Identifier {value:{value}})
+				MERGE (t)<-[:IDENTIFIES]-(i)
+				set i : %s`, identifierLabel)
 
 	query := &neoism.CypherQuery{
 		Statement: statementTemplate,
@@ -97,7 +112,10 @@ func (s service) Write(thing interface{}) error {
 	queries := []*neoism.CypherQuery{}
 
 	deleteEntityRelationshipsQuery := &neoism.CypherQuery{
-		Statement: deleteEntityRelationshipsStatement,
+		Statement: `MATCH (t:Thing {uuid:{uuid}})
+				OPTIONAL MATCH (t)-[is:ISSUED_BY]->(org:Thing)
+				OPTIONAL MATCH (i:Identifier)-[ir:IDENTIFIES]->(t)
+				DELETE ir, is, i`,
 		Parameters: map[string]interface{}{
 			"uuid": fi.UUID,
 		},
@@ -105,7 +123,11 @@ func (s service) Write(thing interface{}) error {
 	queries = append(queries, deleteEntityRelationshipsQuery)
 
 	writeQuery := &neoism.CypherQuery{
-		Statement: writeStatement,
+		Statement: `MERGE (t:Thing{uuid: {uuid}})
+			set t={props}
+			set t :Concept
+			set t :FinancialInstrument
+			set t :Equity`,
 		Parameters: map[string]interface{}{
 			"uuid": fi.UUID,
 			"props": params,
@@ -136,12 +158,12 @@ func (s service) Write(thing interface{}) error {
 	if fi.IssuedBy != "" {
 		orgUuid := fi.IssuedBy
 
-		orgResults := []struct{
+		orgResults := []struct {
 			UUID string `json:"uuid"`
 		}{}
 
 		findOrganisationQuery := &neoism.CypherQuery{
-			Statement: findOrganisationStatement,
+			Statement: `MATCH (i:Identifier {value: {uuid}})-[:IDENTIFIES]->(org:Thing) RETURN org.uuid as uuid`,
 			Parameters: map[string]interface{}{
 				"uuid": fi.IssuedBy,
 			},
@@ -158,7 +180,10 @@ func (s service) Write(thing interface{}) error {
 		}
 
 		organizationRelationshipQuery := &neoism.CypherQuery{
-			Statement: organizationRelationshipStatement,
+			Statement: `MERGE (fi:Thing {uuid: {uuid}})
+					MERGE (orgUpp:Identifier:UPPIdentifier{value:{orgUuid}})
+					MERGE (orgUpp)-[:IDENTIFIES]->(o:Thing) ON CREATE SET o.uuid = {orgUuid}
+					MERGE (fi)-[:ISSUED_BY]->(o)`,
 			Parameters: map[string]interface{}{
 				"uuid": fi.UUID,
 				"orgUuid": orgUuid,
@@ -172,7 +197,12 @@ func (s service) Write(thing interface{}) error {
 
 func (s service) Delete(uuid string) (bool, error) {
 	clearNode := &neoism.CypherQuery{
-		Statement: clearNodeStatement,
+		Statement: `MATCH (t:Thing {uuid: {uuid}})
+				OPTIONAL MATCH (t)-[is:ISSUED_BY]->(org:Thing)
+				OPTIONAL MATCH (t)<-[ir:IDENTIFIES]-(i:Identifier)
+				REMOVE t:Concept:FinancialInstrument:Equity
+				DELETE is, ir, i
+				SET t={props}`,
 		Parameters: map[string]interface{}{
 			"uuid": uuid,
 			"props": map[string]interface{}{
@@ -183,7 +213,11 @@ func (s service) Delete(uuid string) (bool, error) {
 	}
 
 	removeNodeIfUnused := &neoism.CypherQuery{
-		Statement: removeUnusedNodeStatement,
+		Statement: `MATCH (t:Thing {uuid: {uuid}})
+				OPTIONAL MATCH (t)-[a]-(x)
+				WITH t, count(a) AS relCount
+				WHERE relCount = 0
+				DELETE t`,
 		Parameters: map[string]interface{}{
 			"uuid": uuid,
 		},
@@ -210,7 +244,7 @@ func (s service) Count() (int, error) {
 	}{}
 
 	query := &neoism.CypherQuery{
-		Statement: countStatement,
+		Statement: `MATCH (fi:FinancialInstrument) return count(fi) as count`,
 		Result: &results,
 	}
 	err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{query})
@@ -233,7 +267,7 @@ func (s service) IDs(f func(id rwapi.IDEntry) (bool, error)) error {
 	for skip := 0; ; skip += batchSize {
 		results := []rwapi.IDEntry{}
 		readQuery := &neoism.CypherQuery{
-			Statement: idsStatement,
+			Statement: `MATCH (fi:FinancialInstrument) RETURN fi.uuid as id, fi.hash as hash SKIP {skip} LIMIT {limit}`,
 			Parameters: map[string]interface{}{
 				"limit": batchSize,
 				"skip": skip,

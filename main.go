@@ -7,12 +7,12 @@ import (
 	"net/http"
 
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
+	"github.com/Financial-Times/financial-instruments-rw-neo4j/financialinstruments"
 	"github.com/Financial-Times/go-fthealth/v1a"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
 	"github.com/jmcvetta/neoism"
-	"github.com/Financial-Times/financial-instruments-rw-neo4j/financialinstruments"
 )
 
 func main() {
@@ -65,7 +65,7 @@ func main() {
 		if err != nil {
 			log.Errorf("Could not connect to neo4j, error=[%s]\n", err)
 		}
-		batchRunner := neoutils.NewBatchCypherRunner(neoutils.TransactionalCypherRunner{db}, *batchSize)
+		batchRunner := neoutils.NewBatchCypherRunner(neoutils.TransactionalCypherRunner{DB: db}, *batchSize)
 		financialInstrumentsDriver := financialinstruments.NewCypherFinancialInstrumentService(batchRunner, db)
 		financialInstrumentsDriver.Initialise()
 
