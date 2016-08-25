@@ -158,7 +158,7 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(neoutils.ConstraintViolationError{}, err)
+	assert.IsType(*neoutils.ConstraintViolationError{}, err)
 }
 
 func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
@@ -180,7 +180,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(neoutils.ConstraintViolationError{}, err)
+	assert.IsType(*neoutils.ConstraintViolationError{}, err)
 }
 
 func TestDeletingNotExistingFinancialInstrument(t *testing.T) {

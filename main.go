@@ -19,7 +19,7 @@ func main() {
 	app := cli.App("financial-instruments-rw-neo4j", "A RESTful API for managing financial instruments in neo4j")
 	neoURL := app.String(cli.StringOpt{
 		Name:   "neo-url",
-		Value:  "http://neo4j:neo4j_new@localhost:7474/db/data/",
+		Value:  "http://localhost:7474/db/data/",
 		Desc:   "neo4j endpoint URL",
 		EnvVar: "NEO_URL",
 	})
