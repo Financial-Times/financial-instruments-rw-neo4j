@@ -36,7 +36,6 @@ func (s service) Initialise() error {
 		"Thing":               "uuid",
 		"Concept":             "uuid",
 		"FinancialInstrument": "uuid",
-		"Equity":              "uuid",
 		"UPPIdentifier":       "value",
 		"FactsetIdentifier":   "value",
 		"FIGIIdentifier":      "value",
@@ -151,8 +150,7 @@ func (s service) Write(thing interface{}) error {
 		Statement: `MERGE (t:Thing{uuid: {uuid}})
 			set t={props}
 			set t :Concept
-			set t :FinancialInstrument
-			set t :Equity`,
+			set t :FinancialInstrument`,
 		Parameters: map[string]interface{}{
 			"uuid":  fi.UUID,
 			"props": params,
@@ -206,7 +204,7 @@ func (s service) Delete(uuid string) (bool, error) {
 		Statement: `MATCH (t:Thing {uuid: {uuid}})
 				OPTIONAL MATCH (t)-[is:ISSUED_BY]->(org:Thing)
 				OPTIONAL MATCH (t)<-[ir:IDENTIFIES]-(i:Identifier)
-				REMOVE t:Concept:FinancialInstrument:Equity
+				REMOVE t:Concept:FinancialInstrument
 				DELETE is, ir, i
 				SET t={props}`,
 		Parameters: map[string]interface{}{
