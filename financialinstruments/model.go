@@ -4,7 +4,7 @@ type financialInstrument struct {
 	UUID                   string                 `json:"uuid"`
 	PrefLabel              string                 `json:"prefLabel"`
 	AlternativeIdentifiers alternativeIdentifiers `json:"alternativeIdentifiers"`
-	IssuedBy               string 		      `json:"issuedBy,omitempty"`
+	IssuedBy               string                 `json:"issuedBy,omitempty"`
 }
 
 type alternativeIdentifiers struct {
@@ -15,8 +15,8 @@ type alternativeIdentifiers struct {
 }
 
 const (
-	uppIdentifierLabel = "UPPIdentifier"
+	uppIdentifierLabel     = "UPPIdentifier"
 	factsetIdentifierLabel = "FactsetIdentifier"
-	figiIdentifierLabel = "FIGIIdentifier"
-	wsodIdentifierLabel = "WSODIdentifier"
+	figiIdentifierLabel    = "FIGIIdentifier"
+	wsodIdentifierLabel    = "WSODIdentifier"
 )

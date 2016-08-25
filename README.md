@@ -1,5 +1,9 @@
 # Financial Instruments Reader/Writer for Neo4j (financial-instruments-rw-neo4j)
 
+[![Circle CI](https://circleci.com/gh/Financial-Times/financial-instruments-rw-neo4j/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/financial-instruments-rw-neo4j/tree/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/financial-instruments-rw-neo4j)](https://goreportcard.com/report/github.com/Financial-Times/financial-instruments-rw-neo4j)
+
+
 __An API for reading and writing financial instruments into Neo4j. This service expects that the financial instruments received to be in the format used by financial instruments transformer.__
 
 #Installation

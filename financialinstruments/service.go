@@ -1,11 +1,11 @@
 package financialinstruments
 
 import (
-	"github.com/Financial-Times/neo-utils-go/neoutils"
-	"github.com/jmcvetta/neoism"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/Financial-Times/up-rw-app-api-go/rwapi"
+	"github.com/jmcvetta/neoism"
 )
 
 type service struct {
@@ -61,7 +61,7 @@ func (s service) Read(uuid string) (interface{}, bool, error) {
 					figiCode:figi.value,
 					factsetIdentifier:factset.value,
 					wsodIdentifier: wsod.value} as alternativeIdentifiers`,
-		Parameters:map[string]interface{}{
+		Parameters: map[string]interface{}{
 			"uuid": uuid,
 		},
 		Result: &results,
@@ -84,11 +84,36 @@ func createNewIdentifierQuery(uuid string, identifierLabel string, identifierVal
 	query := &neoism.CypherQuery{
 		Statement: statementTemplate,
 		Parameters: map[string]interface{}{
-			"uuid": uuid,
+			"uuid":  uuid,
 			"value": identifierValue,
 		},
 	}
 	return query
+}
+
+func getNewIdentifierQueries(fi financialInstrument) []*neoism.CypherQuery {
+	queries := []*neoism.CypherQuery{}
+
+	//ADD all the IDENTIFIER nodes and IDENTIFIES relationships
+	for _, alternativeUUID := range fi.AlternativeIdentifiers.UUIDS {
+		if alternativeUUID != "" {
+			queries = append(queries, createNewIdentifierQuery(fi.UUID, uppIdentifierLabel, alternativeUUID))
+		}
+	}
+
+	if fi.AlternativeIdentifiers.FactsetIdentifier != "" {
+		queries = append(queries, createNewIdentifierQuery(fi.UUID, factsetIdentifierLabel, fi.AlternativeIdentifiers.FactsetIdentifier))
+	}
+
+	if fi.AlternativeIdentifiers.FIGICode != "" {
+		queries = append(queries, createNewIdentifierQuery(fi.UUID, figiIdentifierLabel, fi.AlternativeIdentifiers.FIGICode))
+	}
+
+	if fi.AlternativeIdentifiers.WSODIdentifier != "" {
+		queries = append(queries, createNewIdentifierQuery(fi.UUID, wsodIdentifierLabel, fi.AlternativeIdentifiers.WSODIdentifier))
+	}
+
+	return queries
 }
 
 func (s service) Write(thing interface{}) error {
@@ -129,34 +154,15 @@ func (s service) Write(thing interface{}) error {
 			set t :FinancialInstrument
 			set t :Equity`,
 		Parameters: map[string]interface{}{
-			"uuid": fi.UUID,
+			"uuid":  fi.UUID,
 			"props": params,
 		},
 	}
 	queries = append(queries, writeQuery)
-
-	//ADD all the IDENTIFIER nodes and IDENTIFIES relationships
-	for _, alternativeUUID := range fi.AlternativeIdentifiers.UUIDS {
-		if alternativeUUID != "" {
-			alternativeIdentifierQuery := createNewIdentifierQuery(fi.UUID, uppIdentifierLabel, alternativeUUID)
-			queries = append(queries, alternativeIdentifierQuery)
-		}
-	}
-
-	if fi.AlternativeIdentifiers.FactsetIdentifier != "" {
-		queries = append(queries, createNewIdentifierQuery(fi.UUID, factsetIdentifierLabel, fi.AlternativeIdentifiers.FactsetIdentifier))
-	}
-
-	if fi.AlternativeIdentifiers.FIGICode != "" {
-		queries = append(queries, createNewIdentifierQuery(fi.UUID, figiIdentifierLabel, fi.AlternativeIdentifiers.FIGICode))
-	}
-
-	if fi.AlternativeIdentifiers.WSODIdentifier != "" {
-		queries = append(queries, createNewIdentifierQuery(fi.UUID, wsodIdentifierLabel, fi.AlternativeIdentifiers.WSODIdentifier))
-	}
+	queries = append(queries, getNewIdentifierQueries(fi)...)
 
 	if fi.IssuedBy != "" {
-		orgUuid := fi.IssuedBy
+		orgUUID := fi.IssuedBy
 
 		orgResults := []struct {
 			UUID string `json:"uuid"`
@@ -176,7 +182,7 @@ func (s service) Write(thing interface{}) error {
 		}
 
 		if len(orgResults) > 0 {
-			orgUuid = orgResults[0].UUID
+			orgUUID = orgResults[0].UUID
 		}
 
 		organizationRelationshipQuery := &neoism.CypherQuery{
@@ -185,8 +191,8 @@ func (s service) Write(thing interface{}) error {
 					MERGE (orgUpp)-[:IDENTIFIES]->(o:Thing) ON CREATE SET o.uuid = {orgUuid}
 					MERGE (fi)-[:ISSUED_BY]->(o)`,
 			Parameters: map[string]interface{}{
-				"uuid": fi.UUID,
-				"orgUuid": orgUuid,
+				"uuid":    fi.UUID,
+				"orgUuid": orgUUID,
 			},
 		}
 		queries = append(queries, organizationRelationshipQuery)
@@ -239,13 +245,13 @@ func (s service) Delete(uuid string) (bool, error) {
 }
 
 func (s service) Count() (int, error) {
-	results := [] struct {
+	results := []struct {
 		Count int `json:"count"`
 	}{}
 
 	query := &neoism.CypherQuery{
 		Statement: `MATCH (fi:FinancialInstrument) return count(fi) as count`,
-		Result: &results,
+		Result:    &results,
 	}
 	err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{query})
 
@@ -270,7 +276,7 @@ func (s service) IDs(f func(id rwapi.IDEntry) (bool, error)) error {
 			Statement: `MATCH (fi:FinancialInstrument) RETURN fi.uuid as id, fi.hash as hash SKIP {skip} LIMIT {limit}`,
 			Parameters: map[string]interface{}{
 				"limit": batchSize,
-				"skip": skip,
+				"skip":  skip,
 			},
 			Result: &results,
 		}
@@ -293,16 +299,4 @@ func (s service) IDs(f func(id rwapi.IDEntry) (bool, error)) error {
 
 func (s service) Check() error {
 	return neoutils.Check(s.cypherRunner)
-}
-
-type requestError struct {
-	details string
-}
-
-func (re requestError) Error() string {
-	return "Invalid Request"
-}
-
-func (re requestError) InvalidRequestDetails() string {
-	return re.details
 }

@@ -1,24 +1,24 @@
 package financialinstruments
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/jmcvetta/neoism"
-	"os"
-	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"fmt"
+	"github.com/Financial-Times/neo-utils-go/neoutils"
+	"github.com/jmcvetta/neoism"
+	"github.com/stretchr/testify/assert"
+	"os"
 	"sort"
+	"testing"
 )
 
 const (
-	testFinancialInstrumentUUID = "6562674e-dbfa-4cb0-85b2-41b0948b7cc2"
-	testIncompleteFinancialInstrumentUUID = "38431a92-dda3-4eb9-a367-60145a8e659f"
+	testFinancialInstrumentUUID              = "6562674e-dbfa-4cb0-85b2-41b0948b7cc2"
+	testIncompleteFinancialInstrumentUUID    = "38431a92-dda3-4eb9-a367-60145a8e659f"
 	specialCharactersFinancialInstrumentUUID = "bb596d64-78c5-4b00-a88f-e8248c956073"
-	duplicateFinancialInstrumentUUID = "bb596d64-78c5-4b00-a88f-e8248c956073"
-	facsetIdentifier = "B000BB-S"
-	figiCode = "BBG000Y1HJT8"
-	orgUuid = "4e484678-cf47-4168-b844-6adb47f8eb58"
-	upToDateOrgUuid = "fbe74159-f4a0-4aa0-9cca-c2bbb9e8bffe"
+	duplicateFinancialInstrumentUUID         = "bb596d64-78c5-4b00-a88f-e8248c956073"
+	facsetIdentifier                         = "B000BB-S"
+	figiCode                                 = "BBG000Y1HJT8"
+	orgUUID                                  = "4e484678-cf47-4168-b844-6adb47f8eb58"
+	upToDateOrgUUID                          = "fbe74159-f4a0-4aa0-9cca-c2bbb9e8bffe"
 )
 
 var uuidsToBeDeleted = []string{
@@ -26,38 +26,38 @@ var uuidsToBeDeleted = []string{
 	testIncompleteFinancialInstrumentUUID,
 	specialCharactersFinancialInstrumentUUID,
 	duplicateFinancialInstrumentUUID,
-	orgUuid,
-	upToDateOrgUuid,
+	orgUUID,
+	upToDateOrgUUID,
 }
 
 var testFinancialInstrument = financialInstrument{
-	UUID: testFinancialInstrumentUUID,
+	UUID:      testFinancialInstrumentUUID,
 	PrefLabel: "GREENWICH CAP ACCEPTANCE  1991-B B1",
 	AlternativeIdentifiers: alternativeIdentifiers{
-		UUIDS: []string{testFinancialInstrumentUUID},
+		UUIDS:             []string{testFinancialInstrumentUUID},
 		FactsetIdentifier: facsetIdentifier,
-		FIGICode: figiCode,
+		FIGICode:          figiCode,
 	},
-	IssuedBy: orgUuid,
+	IssuedBy: orgUUID,
 }
 
 var incompleteFinancialInstrument = financialInstrument{
 	UUID: testIncompleteFinancialInstrumentUUID,
 	AlternativeIdentifiers: alternativeIdentifiers{
-		UUIDS: []string{testIncompleteFinancialInstrumentUUID},
+		UUIDS:             []string{testIncompleteFinancialInstrumentUUID},
 		FactsetIdentifier: facsetIdentifier,
 	},
 }
 
 var specialCharactersFinancialInstrument = financialInstrument{
-	UUID: specialCharactersFinancialInstrumentUUID,
+	UUID:      specialCharactersFinancialInstrumentUUID,
 	PrefLabel: "A&B GEOSCIENCE'S CORP.  COM",
 	AlternativeIdentifiers: alternativeIdentifiers{
-		UUIDS: []string{specialCharactersFinancialInstrumentUUID},
+		UUIDS:             []string{specialCharactersFinancialInstrumentUUID},
 		FactsetIdentifier: facsetIdentifier,
-		FIGICode: figiCode,
+		FIGICode:          figiCode,
 	},
-	IssuedBy: orgUuid,
+	IssuedBy: orgUUID,
 }
 
 func WriteValueAndTestResult(t *testing.T, value financialInstrument) {
@@ -98,14 +98,14 @@ func TestWriteWillUpdateModel(t *testing.T) {
 	assert.NotEmpty(storedFinancialInstrument)
 
 	var upToDateFinancialInstrument = financialInstrument{
-		UUID: testFinancialInstrumentUUID,
+		UUID:      testFinancialInstrumentUUID,
 		PrefLabel: "A&E CAPITAL FUNDING CORP  MULTI-VTG",
 		AlternativeIdentifiers: alternativeIdentifiers{
-			UUIDS: []string{testFinancialInstrumentUUID},
+			UUIDS:             []string{testFinancialInstrumentUUID},
 			FactsetIdentifier: "QX6S54-S",
-			FIGICode: "BBG0066578X7",
+			FIGICode:          "BBG0066578X7",
 		},
-		IssuedBy: upToDateOrgUuid,
+		IssuedBy: upToDateOrgUUID,
 	}
 
 	assert.NoError(cypherDriver.Write(upToDateFinancialInstrument), "Failed to create financial instrument")
@@ -131,7 +131,7 @@ func TestUpdateWillRemoveNoLongerPresentProps(t *testing.T) {
 		AlternativeIdentifiers: alternativeIdentifiers{
 			UUIDS: []string{testFinancialInstrumentUUID},
 		},
-		IssuedBy: orgUuid,
+		IssuedBy: orgUUID,
 	}
 
 	assert.NoError(cypherDriver.Write(upToDateFinancialInstrument), "Failed to create financial instrument")
@@ -149,10 +149,10 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to create financial instrument")
 
 	duplicateFinancialInstrument := financialInstrument{
-		UUID: duplicateFinancialInstrumentUUID,
+		UUID:      duplicateFinancialInstrumentUUID,
 		PrefLabel: testFinancialInstrument.PrefLabel,
 		AlternativeIdentifiers: alternativeIdentifiers{
-			UUIDS: []string{duplicateFinancialInstrumentUUID},
+			UUIDS:             []string{duplicateFinancialInstrumentUUID},
 			FactsetIdentifier: testFinancialInstrument.AlternativeIdentifiers.FactsetIdentifier,
 		},
 	}
@@ -171,10 +171,10 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to create financial instrument")
 
 	duplicateFinancialInstrument := financialInstrument{
-		UUID: duplicateFinancialInstrumentUUID,
+		UUID:      duplicateFinancialInstrumentUUID,
 		PrefLabel: testFinancialInstrument.PrefLabel,
 		AlternativeIdentifiers: alternativeIdentifiers{
-			UUIDS: []string{duplicateFinancialInstrumentUUID},
+			UUIDS:    []string{duplicateFinancialInstrumentUUID},
 			FIGICode: testFinancialInstrument.AlternativeIdentifiers.FIGICode,
 		},
 	}
@@ -183,7 +183,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	assert.IsType(neoism.NeoError{}, err)
 }
 
-func TestDeletingNotExistingFinancialInstrument(t *testing.T)  {
+func TestDeletingNotExistingFinancialInstrument(t *testing.T) {
 	assert := assert.New(t)
 	db := getDatabaseConnectionAndCheckClean(t, assert)
 	defer cleanDB(db, assert)
@@ -276,7 +276,7 @@ func checkDbClean(db *neoism.Database, t *testing.T) {
 	assert := assert.New(t)
 
 	result := []struct {
-		Uuid string `json:"fi.uuid"`
+		UUID string `json:"fi.uuid"`
 	}{}
 
 	checkGraph := neoism.CypherQuery{
