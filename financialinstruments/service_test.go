@@ -158,7 +158,7 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(neoism.NeoError{}, err)
+	assert.IsType(neoutils.ConstraintViolationError{}, err)
 }
 
 func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
@@ -180,7 +180,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(neoism.NeoError{}, err)
+	assert.IsType(neoutils.ConstraintViolationError{}, err)
 }
 
 func TestDeletingNotExistingFinancialInstrument(t *testing.T) {
@@ -205,7 +205,7 @@ func TestDelete(t *testing.T) {
 
 	found, err := cypherDriver.Delete(testFinancialInstrumentUUID)
 	assert.True(found, "Failed to delete financial instrument with uuid: %s", testFinancialInstrumentUUID)
-	assert.NoError(err, "Error occured while trying to delete financial instrument with uuid: %s", testFinancialInstrumentUUID)
+	assert.NoError(err, "Error occurred while trying to delete financial instrument with uuid: %s", testFinancialInstrumentUUID)
 
 	fi, found, err := cypherDriver.Read(testFinancialInstrumentUUID)
 	assert.Equal(financialInstrument{}, fi, "The financial instrument with uuid: %s should have been deleted.", testFinancialInstrumentUUID)
