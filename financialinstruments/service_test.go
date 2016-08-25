@@ -158,7 +158,7 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(*neoutils.ConstraintViolationError{}, err)
+	assert.IsType(&neoutils.ConstraintViolationError{}, err)
 }
 
 func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
@@ -180,7 +180,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(*neoutils.ConstraintViolationError{}, err)
+	assert.IsType(&neoutils.ConstraintViolationError{}, err)
 }
 
 func TestDeletingNotExistingFinancialInstrument(t *testing.T) {
@@ -226,7 +226,7 @@ func TestCount(t *testing.T) {
 
 	count, err := cypherDriver.Count()
 	assert.NoError(err, "Error trying to find the number of financial instruments")
-	assert.Equal(count, 2, "Expeting two results but got %i", count)
+	assert.Equal(count, 2, "Expeting two results but got %d", count)
 }
 
 func readAndCompare(expectedValue financialInstrument, t *testing.T, db *neoism.Database) {
@@ -252,7 +252,7 @@ func getDatabaseConnectionAndCheckClean(t *testing.T, assert *assert.Assertions)
 func getDatabaseConnection(assert *assert.Assertions) *neoism.Database {
 	url := os.Getenv("NEO4J_TEST_URL")
 	if url == "" {
-		url = "http://localhost:7474/db/data"
+		url = "http://neo4j:neo4j_new@localhost:7474/db/data"
 	}
 
 	db, err := neoism.Connect(url)
