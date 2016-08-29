@@ -30,8 +30,7 @@ We use the transformer to get the information to write and from that we establis
 
 Use gojson against a transformer endpoint to create a financialInstrument struct and update the financialInstrument/model.go file. 
 
-<!--todo add financial instruments transformer url-->
-`curl http://ftaps39403-law1a-eu-t:8080/`
+`curl http://pub-xp-up.ft.com/__financial-instruments-transformer/transformers/financialinstruments/6562674e-dbfa-4cb0-85b2-41b0948b7cc2`
 
 Response format for current version:
 
@@ -63,7 +62,7 @@ We run queries in batches. If a batch fails, all failing requests will get a 500
 
 Example PUT request:
 
-    `curl -XPUT localhost:8080/financialInstruments/6562674e-dbfa-4cb0-85b2-41b0948b7cc2 \
+    `curl -XPUT localhost:8080/financial-instruments/6562674e-dbfa-4cb0-85b2-41b0948b7cc2 \
          -H "X-Request-Id: 123" \
          -H "Content-Type: application/json" \
          -d `{"uuid":"6562674e-dbfa-4cb0-85b2-41b0948b7cc2","prefLabel":"GREENWICH CAP ACCEPTANCE  1991-B B1","alternativeIdentifiers":{"uuids":["6562674e-dbfa-4cb0-85b2-41b0948b7cc2"],"factsetIdentifier":"B000BB-S","figiCode":"BBG000Y1HJT8"},"issuedBy":"4e484678-cf47-4168-b844-6adb47f8eb58"}`
