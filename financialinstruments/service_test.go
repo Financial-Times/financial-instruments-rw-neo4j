@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	testFinancialInstrumentUUID              = "6562674e-dbfa-4cb0-85b2-41b0948b7cc2"
-	testIncompleteFinancialInstrumentUUID    = "38431a92-dda3-4eb9-a367-60145a8e659f"
+	testFinancialInstrumentUUID = "6562674e-dbfa-4cb0-85b2-41b0948b7cc2"
+	testIncompleteFinancialInstrumentUUID = "38431a92-dda3-4eb9-a367-60145a8e659f"
 	specialCharactersFinancialInstrumentUUID = "bb596d64-78c5-4b00-a88f-e8248c956073"
-	duplicateFinancialInstrumentUUID         = "bb596d64-78c5-4b00-a88f-e8248c956073"
-	facsetIdentifier                         = "B000BB-S"
-	figiCode                                 = "BBG000Y1HJT8"
-	orgUUID                                  = "4e484678-cf47-4168-b844-6adb47f8eb58"
-	upToDateOrgUUID                          = "fbe74159-f4a0-4aa0-9cca-c2bbb9e8bffe"
+	duplicateFinancialInstrumentUUID = "bb596d64-78c5-4b00-a88f-e8248c956073"
+	facsetIdentifier = "B000BB-S"
+	figiCode = "BBG000Y1HJT8"
+	orgUUID = "4e484678-cf47-4168-b844-6adb47f8eb58"
+	upToDateOrgUUID = "fbe74159-f4a0-4aa0-9cca-c2bbb9e8bffe"
 )
 
 var uuidsToBeDeleted = []string{
@@ -229,7 +229,7 @@ func TestCount(t *testing.T) {
 	assert.Equal(count, 2, "Expeting two results but got %d", count)
 }
 
-func readAndCompare(expectedValue financialInstrument, t *testing.T, db *neoism.Database) {
+func readAndCompare(expectedValue financialInstrument, t *testing.T, db neoutils.NeoConnection) {
 	sort.Strings(expectedValue.AlternativeIdentifiers.UUIDS)
 
 	dbValue, found, err := getCypherDriver(db).Read(expectedValue.UUID)
@@ -242,25 +242,27 @@ func readAndCompare(expectedValue financialInstrument, t *testing.T, db *neoism.
 	assert.EqualValues(t, expectedValue, foundValue)
 }
 
-func getDatabaseConnectionAndCheckClean(t *testing.T, assert *assert.Assertions) *neoism.Database {
+func getDatabaseConnectionAndCheckClean(t *testing.T, assert *assert.Assertions) neoutils.NeoConnection {
 	db := getDatabaseConnection(assert)
 	cleanDB(db, assert)
 	checkDbClean(db, t)
 	return db
 }
 
-func getDatabaseConnection(assert *assert.Assertions) *neoism.Database {
+func getDatabaseConnection(assert *assert.Assertions) neoutils.NeoConnection {
 	url := os.Getenv("NEO4J_TEST_URL")
 	if url == "" {
 		url = "http://localhost:7474/db/data"
 	}
 
-	db, err := neoism.Connect(url)
+	conf := neoutils.DefaultConnectionConfig()
+	conf.Transactional = false
+	db, err := neoutils.Connect(url, conf)
 	assert.NoError(err, "Failed to connect to Neo4j")
 	return db
 }
 
-func cleanDB(db *neoism.Database, assert *assert.Assertions) {
+func cleanDB(db neoutils.CypherRunner, assert *assert.Assertions) {
 	qs := []*neoism.CypherQuery{}
 
 	for _, uuid := range uuidsToBeDeleted {
@@ -272,7 +274,7 @@ func cleanDB(db *neoism.Database, assert *assert.Assertions) {
 	assert.NoError(err)
 }
 
-func checkDbClean(db *neoism.Database, t *testing.T) {
+func checkDbClean(db neoutils.CypherRunner, t *testing.T) {
 	assert := assert.New(t)
 
 	result := []struct {
@@ -291,13 +293,13 @@ func checkDbClean(db *neoism.Database, t *testing.T) {
 		},
 		Result: &result,
 	}
-	err := db.Cypher(&checkGraph)
+	err := db.CypherBatch([]*neoism.CypherQuery{&checkGraph})
 	assert.NoError(err)
 	assert.Empty(result)
 }
 
-func getCypherDriver(db *neoism.Database) service {
-	cr := NewCypherFinancialInstrumentService(neoutils.NewBatchCypherRunner(neoutils.StringerDb{db}, 1024), db)
+func getCypherDriver(db neoutils.NeoConnection) service {
+	cr := NewCypherFinancialInstrumentService(db)
 	cr.Initialise()
 	return cr
 }
