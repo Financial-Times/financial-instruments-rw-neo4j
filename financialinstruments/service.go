@@ -9,22 +9,18 @@ import (
 )
 
 type service struct {
-	cypherRunner neoutils.CypherRunner
-	indexManager neoutils.IndexManager
+	conn neoutils.NeoConnection
 }
 
 const batchSize = 4096
 
 //NewCypherFinancialInstrumentService returns a new service responsible for writing financial instruments in Neo4j
-func NewCypherFinancialInstrumentService(cypherRunner neoutils.CypherRunner, indexManager neoutils.IndexManager) service {
-	return service{
-		cypherRunner: cypherRunner,
-		indexManager: indexManager,
-	}
+func NewCypherFinancialInstrumentService(cypherRunner neoutils.NeoConnection) service {
+	return service{cypherRunner}
 }
 
 func (s service) Initialise() error {
-	err := neoutils.EnsureIndexes(s.indexManager, map[string]string{
+	err := s.conn.EnsureIndexes(map[string]string{
 		"Identifier": "value",
 	})
 
@@ -32,7 +28,7 @@ func (s service) Initialise() error {
 		return err
 	}
 
-	return neoutils.EnsureConstraints(s.indexManager, map[string]string{
+	return s.conn.EnsureConstraints(map[string]string{
 		"Thing":               "uuid",
 		"Concept":             "uuid",
 		"FinancialInstrument": "uuid",
@@ -66,7 +62,7 @@ func (s service) Read(uuid string) (interface{}, bool, error) {
 		Result: &results,
 	}
 
-	if err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{readQuery}); err != nil || len(results) == 0 {
+	if err := s.conn.CypherBatch([]*neoism.CypherQuery{readQuery}); err != nil || len(results) == 0 {
 		return financialInstrument{}, false, err
 	}
 
@@ -174,7 +170,7 @@ func (s service) Write(thing interface{}) error {
 			Result: &orgResults,
 		}
 
-		if err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{findOrganisationQuery}); err != nil {
+		if err := s.conn.CypherBatch([]*neoism.CypherQuery{findOrganisationQuery}); err != nil {
 			fmt.Println(err)
 			return err
 		}
@@ -196,7 +192,7 @@ func (s service) Write(thing interface{}) error {
 		queries = append(queries, organizationRelationshipQuery)
 	}
 
-	return s.cypherRunner.CypherBatch(queries)
+	return s.conn.CypherBatch(queries)
 }
 
 func (s service) Delete(uuid string) (bool, error) {
@@ -227,7 +223,7 @@ func (s service) Delete(uuid string) (bool, error) {
 		},
 	}
 
-	err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{clearNode, removeNodeIfUnused})
+	err := s.conn.CypherBatch([]*neoism.CypherQuery{clearNode, removeNodeIfUnused})
 
 	stats, err := clearNode.Stats()
 	if err != nil {
@@ -251,7 +247,7 @@ func (s service) Count() (int, error) {
 		Statement: `MATCH (fi:FinancialInstrument) return count(fi) as count`,
 		Result:    &results,
 	}
-	err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{query})
+	err := s.conn.CypherBatch([]*neoism.CypherQuery{query})
 
 	if err != nil {
 		return 0, err
@@ -279,7 +275,7 @@ func (s service) IDs(f func(id rwapi.IDEntry) (bool, error)) error {
 			Result: &results,
 		}
 
-		if err := s.cypherRunner.CypherBatch([]*neoism.CypherQuery{readQuery}); err != nil {
+		if err := s.conn.CypherBatch([]*neoism.CypherQuery{readQuery}); err != nil {
 			return nil
 		}
 		if len(results) == 0 {
@@ -296,5 +292,5 @@ func (s service) IDs(f func(id rwapi.IDEntry) (bool, error)) error {
 }
 
 func (s service) Check() error {
-	return neoutils.Check(s.cypherRunner)
+	return neoutils.Check(s.conn)
 }

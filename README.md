@@ -30,7 +30,7 @@ We use the transformer to get the information to write and from that we establis
 
 Use gojson against a transformer endpoint to create a financialInstrument struct and update the financialInstrument/model.go file. 
 
-`curl http://pub-xp-up.ft.com/__financial-instruments-transformer/transformers/financialinstruments/6562674e-dbfa-4cb0-85b2-41b0948b7cc2`
+`curl http://localhost:8080/transformers/financial-instruments/6562674e-dbfa-4cb0-85b2-41b0948b7cc2`
 
 Response format for current version:
 
