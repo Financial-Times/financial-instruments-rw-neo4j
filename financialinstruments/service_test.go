@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"testing"
+	"github.com/Financial-Times/up-rw-app-api-go/rwapi"
 )
 
 const (
@@ -158,7 +159,7 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(&neoutils.ConstraintViolationError{}, err)
+	assert.IsType(rwapi.ConstraintOrTransactionError{}, err)
 }
 
 func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
@@ -180,7 +181,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	}
 	err := cypherDriver.Write(duplicateFinancialInstrument)
 	assert.Error(err)
-	assert.IsType(&neoutils.ConstraintViolationError{}, err)
+	assert.IsType(rwapi.ConstraintOrTransactionError{}, err)
 }
 
 func TestDeletingNotExistingFinancialInstrument(t *testing.T) {
