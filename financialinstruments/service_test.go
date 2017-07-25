@@ -20,6 +20,7 @@ const (
 	figiCode = "BBG000Y1HJT8"
 	orgUUID = "4e484678-cf47-4168-b844-6adb47f8eb58"
 	upToDateOrgUUID = "fbe74159-f4a0-4aa0-9cca-c2bbb9e8bffe"
+	test_trans_id = "test_tid"
 )
 
 var uuidsToBeDeleted = []string{
@@ -68,7 +69,7 @@ func WriteValueAndTestResult(t *testing.T, value financialInstrument) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(value), "Failed to create financial instrument")
+	assert.NoError(cypherDriver.Write(value, test_trans_id), "Failed to create financial instrument")
 
 	readAndCompare(value, t, db)
 }
@@ -92,8 +93,8 @@ func TestWriteWillUpdateModel(t *testing.T) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to create financial instrument")
-	storedFinancialInstrument, _, err := cypherDriver.Read(testFinancialInstrumentUUID)
+	assert.NoError(cypherDriver.Write(testFinancialInstrument, test_trans_id), "Failed to create financial instrument")
+	storedFinancialInstrument, _, err := cypherDriver.Read(testFinancialInstrumentUUID, test_trans_id)
 
 	assert.NoError(err)
 	assert.NotEmpty(storedFinancialInstrument)
@@ -109,7 +110,7 @@ func TestWriteWillUpdateModel(t *testing.T) {
 		IssuedBy: upToDateOrgUUID,
 	}
 
-	assert.NoError(cypherDriver.Write(upToDateFinancialInstrument), "Failed to create financial instrument")
+	assert.NoError(cypherDriver.Write(upToDateFinancialInstrument, test_trans_id), "Failed to create financial instrument")
 
 	readAndCompare(upToDateFinancialInstrument, t, db)
 }
@@ -121,8 +122,8 @@ func TestUpdateWillRemoveNoLongerPresentProps(t *testing.T) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to create financial instrument")
-	storedFinancialInstrument, _, err := cypherDriver.Read(testFinancialInstrumentUUID)
+	assert.NoError(cypherDriver.Write(testFinancialInstrument, test_trans_id), "Failed to create financial instrument")
+	storedFinancialInstrument, _, err := cypherDriver.Read(testFinancialInstrumentUUID, test_trans_id)
 
 	assert.NoError(err)
 	assert.NotEmpty(storedFinancialInstrument)
@@ -135,7 +136,7 @@ func TestUpdateWillRemoveNoLongerPresentProps(t *testing.T) {
 		IssuedBy: orgUUID,
 	}
 
-	assert.NoError(cypherDriver.Write(upToDateFinancialInstrument), "Failed to create financial instrument")
+	assert.NoError(cypherDriver.Write(upToDateFinancialInstrument, test_trans_id), "Failed to create financial instrument")
 
 	readAndCompare(upToDateFinancialInstrument, t, db)
 }
@@ -147,7 +148,7 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to create financial instrument")
+	assert.NoError(cypherDriver.Write(testFinancialInstrument, test_trans_id), "Failed to create financial instrument")
 
 	duplicateFinancialInstrument := financialInstrument{
 		UUID:      duplicateFinancialInstrumentUUID,
@@ -157,7 +158,7 @@ func TestWriteFinancialInstrumentsWithSameFacsetIdentifierFails(t *testing.T) {
 			FactsetIdentifier: testFinancialInstrument.AlternativeIdentifiers.FactsetIdentifier,
 		},
 	}
-	err := cypherDriver.Write(duplicateFinancialInstrument)
+	err := cypherDriver.Write(duplicateFinancialInstrument, test_trans_id)
 	assert.Error(err)
 	assert.IsType(rwapi.ConstraintOrTransactionError{}, err)
 }
@@ -169,7 +170,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to create financial instrument")
+	assert.NoError(cypherDriver.Write(testFinancialInstrument, test_trans_id), "Failed to create financial instrument")
 
 	duplicateFinancialInstrument := financialInstrument{
 		UUID:      duplicateFinancialInstrumentUUID,
@@ -179,7 +180,7 @@ func TestWriteFinancialInstrumentsWithSameFigiCodesFails(t *testing.T) {
 			FIGICode: testFinancialInstrument.AlternativeIdentifiers.FIGICode,
 		},
 	}
-	err := cypherDriver.Write(duplicateFinancialInstrument)
+	err := cypherDriver.Write(duplicateFinancialInstrument, test_trans_id)
 	assert.Error(err)
 	assert.IsType(rwapi.ConstraintOrTransactionError{}, err)
 }
@@ -190,7 +191,7 @@ func TestDeletingNotExistingFinancialInstrument(t *testing.T) {
 	defer cleanDB(db, assert)
 
 	cypherDriver := getCypherDriver(db)
-	res, err := cypherDriver.Delete(testFinancialInstrumentUUID)
+	res, err := cypherDriver.Delete(testFinancialInstrumentUUID, test_trans_id)
 
 	assert.NoError(err)
 	assert.False(res)
@@ -202,13 +203,13 @@ func TestDelete(t *testing.T) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to write person")
+	assert.NoError(cypherDriver.Write(testFinancialInstrument, test_trans_id), "Failed to write person")
 
-	found, err := cypherDriver.Delete(testFinancialInstrumentUUID)
+	found, err := cypherDriver.Delete(testFinancialInstrumentUUID, test_trans_id)
 	assert.True(found, "Failed to delete financial instrument with uuid: %s", testFinancialInstrumentUUID)
 	assert.NoError(err, "Error occurred while trying to delete financial instrument with uuid: %s", testFinancialInstrumentUUID)
 
-	fi, found, err := cypherDriver.Read(testFinancialInstrumentUUID)
+	fi, found, err := cypherDriver.Read(testFinancialInstrumentUUID, test_trans_id)
 	assert.Equal(financialInstrument{}, fi, "The financial instrument with uuid: %s should have been deleted.", testFinancialInstrumentUUID)
 	assert.False(found, "Found financial instrument for uuid: %s which should have been deleted", testFinancialInstrumentUUID)
 	assert.NoError(err, "Error trying to find financial instrument for uuid: %s", testFinancialInstrumentUUID)
@@ -221,9 +222,9 @@ func TestCount(t *testing.T) {
 	cypherDriver := getCypherDriver(db)
 	defer cleanDB(db, assert)
 
-	assert.NoError(cypherDriver.Write(testFinancialInstrument), "Failed to write person")
+	assert.NoError(cypherDriver.Write(testFinancialInstrument, test_trans_id), "Failed to write person")
 	incompleteFinancialInstrument.AlternativeIdentifiers.FactsetIdentifier = "LQ6FS3-S"
-	assert.NoError(cypherDriver.Write(incompleteFinancialInstrument), "Failed to write person")
+	assert.NoError(cypherDriver.Write(incompleteFinancialInstrument, test_trans_id), "Failed to write person")
 
 	count, err := cypherDriver.Count()
 	assert.NoError(err, "Error trying to find the number of financial instruments")
@@ -233,7 +234,7 @@ func TestCount(t *testing.T) {
 func readAndCompare(expectedValue financialInstrument, t *testing.T, db neoutils.NeoConnection) {
 	sort.Strings(expectedValue.AlternativeIdentifiers.UUIDS)
 
-	dbValue, found, err := getCypherDriver(db).Read(expectedValue.UUID)
+	dbValue, found, err := getCypherDriver(db).Read(expectedValue.UUID, test_trans_id)
 	assert.NoError(t, err)
 	assert.True(t, found)
 
