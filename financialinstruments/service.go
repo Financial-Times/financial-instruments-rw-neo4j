@@ -38,7 +38,7 @@ func (s service) Initialise() error {
 	})
 }
 
-func (s service) Read(uuid string) (interface{}, bool, error) {
+func (s service) Read(uuid string, transactionID string) (interface{}, bool, error) {
 
 	results := []financialInstrument{}
 
@@ -111,7 +111,7 @@ func getNewIdentifierQueries(fi financialInstrument) []*neoism.CypherQuery {
 	return queries
 }
 
-func (s service) Write(thing interface{}) error {
+func (s service) Write(thing interface{}, transactionID string) error {
 
 	hash, err := writeHash(thing)
 	if err != nil {
@@ -195,7 +195,7 @@ func (s service) Write(thing interface{}) error {
 	return s.conn.CypherBatch(queries)
 }
 
-func (s service) Delete(uuid string) (bool, error) {
+func (s service) Delete(uuid string, transactionID string) (bool, error) {
 	clearNode := &neoism.CypherQuery{
 		Statement: `MATCH (t:Thing {uuid: {uuid}})
 				OPTIONAL MATCH (t)-[is:ISSUED_BY]->(org:Thing)
